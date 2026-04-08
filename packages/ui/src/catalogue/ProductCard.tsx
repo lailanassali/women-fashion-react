@@ -11,7 +11,7 @@ export function ProductCard({ product, onProductClick }: ProductCardProps): Reac
   return (
     <article className="product-card" onClick={() => onProductClick(product)}>
       <div className="product-image-wrap">
-        <img className="product-image" src={product.image} alt={product.title} />
+        <img className="product-image" src={product.image} alt={product.title} loading="lazy" />
       </div>
       <div className="product-card-body">
         <p className="product-category">{product.category}</p>

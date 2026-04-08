@@ -1,6 +1,7 @@
 export type { Product, BasketItem } from './types'
 export type { SortOption } from './useProductFilter'
 export { ProductCard } from './ProductCard'
+export { ProductCardSkeleton, ProductGridSkeleton } from './ProductCardSkeleton'
 export { ProductGrid } from './ProductGrid'
 export { PaginationControls } from './PaginationControls'
 export { ProductModal } from './ProductModal'

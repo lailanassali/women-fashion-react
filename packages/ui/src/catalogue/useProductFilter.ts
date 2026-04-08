@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { Product } from './types'
+import { useDebounce } from './useDebounce'
 
 export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'rating-desc'
 
@@ -16,6 +17,9 @@ export function useProductFilter(products: Product[]) {
     sort: 'default',
   })
 
+  // Debounce search so filtering only runs 300ms after the user stops typing
+  const debouncedSearch = useDebounce(filters.search, 300)
+
   const categories = useMemo(
     () => Array.from(new Set(products.map(p => p.category))).sort(),
     [products]
@@ -24,8 +28,8 @@ export function useProductFilter(products: Product[]) {
   const filtered = useMemo(() => {
     let result = products
 
-    if (filters.search.trim()) {
-      const q = filters.search.toLowerCase()
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase()
       result = result.filter(p => p.title.toLowerCase().includes(q))
     }
 
@@ -43,7 +47,7 @@ export function useProductFilter(products: Product[]) {
       default:
         return result
     }
-  }, [products, filters])
+  }, [products, debouncedSearch, filters.category, filters.sort])
 
   const setSearch = (search: string) => setFilters(prev => ({ ...prev, search }))
   const setCategory = (category: string) => setFilters(prev => ({ ...prev, category }))

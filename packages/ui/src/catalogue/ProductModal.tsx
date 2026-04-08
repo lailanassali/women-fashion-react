@@ -32,7 +32,7 @@ export function ProductModal({ product, onClose, onAddToBasket }: ProductModalPr
         <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
         <div className="modal-content">
           <div className="modal-image-wrap">
-            <img className="modal-image" src={product.image} alt={product.title} />
+            <img className="modal-image" src={product.image} alt={product.title} loading="lazy" />
           </div>
           <div className="modal-details">
             <p className="modal-category">{product.category}</p>

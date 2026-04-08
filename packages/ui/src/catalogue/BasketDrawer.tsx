@@ -26,7 +26,7 @@ export function BasketDrawer({ items, totalPrice, onClose, onRemoveItem, onUpdat
             <ul className="basket-list">
               {items.map(({ product, quantity }) => (
                 <li key={product.id} className="basket-item">
-                  <img className="basket-item-image" src={product.image} alt={product.title} />
+                  <img className="basket-item-image" src={product.image} alt={product.title} loading="lazy" />
                   <div className="basket-item-info">
                     <p className="basket-item-title">{product.title}</p>
                     <p className="basket-item-subtotal">£{(product.price * quantity).toFixed(2)}</p>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import {
   ProductGrid,
+  ProductGridSkeleton,
   PaginationControls,
   ProductModal,
   BasketDrawer,
@@ -26,7 +27,7 @@ async function fetchProducts(): Promise<Product[]> {
 const PRODUCTS_PER_PAGE = 8
 
 // ---- Basket UI ----
-function BasketSection(): React.JSX.Element | null {
+function BasketSection(): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const { items, totalCount, totalPrice, removeItem, updateQuantity } = useBasketContext()
 
@@ -50,6 +51,21 @@ function BasketSection(): React.JSX.Element | null {
   )
 }
 
+// ---- Empty state ----
+function EmptyState({ hasFilters }: { hasFilters: boolean }): React.JSX.Element {
+  return (
+    <div className="empty-state">
+      <p className="empty-state-icon">🔍</p>
+      <p className="empty-state-title">No products found</p>
+      <p className="empty-state-body">
+        {hasFilters
+          ? 'Try adjusting your search or filters.'
+          : 'No products are available right now.'}
+      </p>
+    </div>
+  )
+}
+
 // ---- Product catalogue ----
 function ProductCatalogueContent(): React.JSX.Element {
   const [page, setPage] = useState(1)
@@ -67,6 +83,7 @@ function ProductCatalogueContent(): React.JSX.Element {
   // Client state — filter/sort derived from server data
   const { filters, filtered, categories, setSearch, setCategory, setSort } = useProductFilter(products ?? [])
 
+  const hasActiveFilters = !!(filters.search || filters.category || filters.sort !== 'default')
   const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE))
   const pageProducts = filtered.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE)
 
@@ -94,7 +111,7 @@ function ProductCatalogueContent(): React.JSX.Element {
       </div>
 
       {isLoading ? (
-        <div className="message">Loading products...</div>
+        <ProductGridSkeleton count={PRODUCTS_PER_PAGE} />
       ) : error ? (
         <div className="message error">Unable to load products. Please try again later.</div>
       ) : (
@@ -109,8 +126,14 @@ function ProductCatalogueContent(): React.JSX.Element {
             onCategoryChange={setCategory}
             onSortChange={setSort}
           />
-          <ProductGrid products={pageProducts} onProductClick={setSelectedProduct} />
-          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          {filtered.length === 0 ? (
+            <EmptyState hasFilters={hasActiveFilters} />
+          ) : (
+            <>
+              <ProductGrid products={pageProducts} onProductClick={setSelectedProduct} />
+              <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+            </>
+          )}
         </>
       )}
 
