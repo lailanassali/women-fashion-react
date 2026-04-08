@@ -17,6 +17,11 @@
       "types": "./src/link/index.tsx",
       "require": "./dist/link/index.js",
       "import": "./dist/link/index.mjs"
+    },
+    "./catalogue": {
+      "types": "./src/catalogue/index.tsx",
+      "require": "./dist/catalogue/index.js",
+      "import": "./dist/catalogue/index.mjs"
     }
   },
   "scripts": {
