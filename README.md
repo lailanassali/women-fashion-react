@@ -1,10 +1,6 @@
 # Women's Fashion Retail Store
 
-<<<<<<< HEAD
 Hello!
-=======
-Hello, hola, bonjour, ciao, nǐ hǎo!
->>>>>>> 87415d4 (add simple react boilerplate project)
 
 This project is a women's fashion retail store, a clothing brand. It features a Next.js frontend and an Express API, using Turborepo for monorepo management.
 
@@ -50,8 +46,3 @@ Likewise, if you delete something without removing it from this array, or are on
 - [Express Documentation](https://expressjs.com/en/starter/installing.html)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Turborepo Documentation](https://turbo.build/repo/docs)
-<<<<<<< HEAD
-=======
-
-Feel free to reach out if you have any questions or run into any issues. Good luck with your interview!
->>>>>>> 87415d4 (add simple react boilerplate project)
