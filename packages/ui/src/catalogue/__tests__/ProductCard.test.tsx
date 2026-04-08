@@ -18,7 +18,7 @@ describe('ProductCard', () => {
     )
 
     expect(getByText('Test Product')).toBeDefined()
-    expect(getByText('$42.00')).toBeDefined()
+    expect(getByText('£42.00')).toBeDefined()
     expect(getByText('fashion')).toBeDefined()
     expect(getByAltText('Test Product')).toBeDefined()
   })
