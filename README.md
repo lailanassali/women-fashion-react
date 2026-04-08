@@ -1,48 +1,138 @@
 # Women's Fashion Retail Store
 
-Hello!
+A women's fashion product catalogue built with Next.js, Express, and Turborepo. Features product browsing, search and filtering, a persistent basket, and a full test suite.
 
-This project is a women's fashion retail store, a clothing brand. It features a Next.js frontend and an Express API, using Turborepo for monorepo management.
+---
 
 ## Getting Started
 
-To get started, you'll need to have a relatively recent version of Node.js installed on your machine (check [package.json](./package.json) for minimum requirements). You can download it from [here](https://nodejs.org/en/download/), or use a tool like [NVM](https://github.com/nvm-sh/nvm) or [Volta](https://volta.sh/).
-
-Once you have Node.js installed, you can run the following commands to get the project up and running:
+You'll need Node.js installed ([download](https://nodejs.org/en/download/) or use [NVM](https://github.com/nvm-sh/nvm)).
 
 ```bash
 # Clone the repository
-git clone
-
-# Navigate into the project directory
-cd tech-interview
+git clone <repo-url>
+cd women-fashion-react
 
 # Install dependencies
 npm install
 
-# Run the development server
+# Run everything (frontend + API)
 npm run dev
 ```
 
-At this point, you should be able to see a working page at [http://localhost:3002](http://localhost:3002). You can also check the API at the healthcheck endpoint at [http://localhost:5001/status](http://localhost:5001/status). And you can try the other commands in the [package.json](./package.json) - check that tests run and pass for instance.
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3002 |
+| API healthcheck | http://localhost:5001/status |
 
-## What's Inside?
+---
 
-You'll find a monorepo setup using [Turborepo](https://turbo.build/repo/docs), which we're using to help us manage multiple packages, a frontend and an api in a single repository. You'll be working in the following places (and shouldn't really have to touch anything else):
+## Project Structure
 
-- [`/apps/api/src`](./apps/api/src) (Express API)
-- [`/apps/frontend/src/app`](./apps/frontend/src/app) (Next.js frontend)
-- [`/packages/ui`](./packages/ui) (React UI component library)
+```
+women-fashion-react/
+├── apps/
+│   ├── frontend/          # Next.js app (pages, styles, catalogue client)
+│   └── api/               # Express API
+└── packages/
+    ├── ui/                # Shared React component library
+    │   └── src/catalogue/ # All product catalogue components and hooks
+    ├── logger/            # Shared logger utility
+    └── jest-presets/      # Shared Jest configuration
+```
 
-### Creating new packages/components/libs
+The key places you'll work:
 
-Just a quick note here, as the setup may look unfamiliar. Turborepo isn't a fan of barrel files ([for good reasons](https://turbo.build/repo/docs/guides/tools/typescript#creating-entrypoints-to-the-package)) and uses explicit exports. So in order to export your new component (something like the [Hello](packages/ui/src/hello/index.tsx) component), you need to add it to the [package.json](packages/ui/package.json) exports array, to the [tsup.config.ts](packages/ui/tsup.config.ts) entry array, and then import it where you need it with: `import { Another } from "@repo/ui/another";`.
+- `apps/frontend/src/app/` — page entry point, `ProductCatalogueClient`, styles
+- `packages/ui/src/catalogue/` — all components, hooks, and types
 
-Likewise, if you delete something without removing it from this array, or are only exporting a single component, you might get `Module not found` or `Unsupported Server Component type: undefined` sorts of errors. You'll also need to run `npm run dev` again to see your changes reflected.
+---
+
+## Features
+
+- **Product listing** — grid of cards with image, title, price, rating, category
+- **Product detail modal** — full description, star rating, review count, add to basket
+- **Search & filtering** — debounced search by name, filter by category, sort by price or rating
+- **Basket** — add, remove, update quantity; total price; persisted in `localStorage`
+- **Skeleton loading** — shimmer cards shown while products fetch
+- **Empty state** — helpful message when search/filter returns no results
+- **Responsive** — works across mobile and desktop
+
+---
+
+## Architecture Decisions
+
+### Monorepo with Turborepo
+All packages share a single `npm install` and `turbo run` orchestrates builds, tests, and dev servers in parallel with caching.
+
+### Component library in `packages/ui`
+UI components live in a separate package rather than directly in the app. This enforces a clean boundary — the frontend imports from `@repo/ui/catalogue`, meaning components stay reusable and independently testable.
+
+To add a new component, export it from three places:
+1. `packages/ui/package.json` — add to `exports`
+2. `packages/ui/tsup.config.ts` — add to `entry`
+3. `packages/ui/src/catalogue/index.tsx` — re-export
+
+### Server vs client state
+| State | Tool | Why |
+|---|---|---|
+| Products (remote data) | React Query | Handles caching, background refetch, loading/error states |
+| Basket | React Context + `useBasket` | Shared client state, available anywhere in the tree |
+| Filter/sort | Local `useState` | Page-scoped, no need to share across components |
+
+React Query's `QueryClientProvider` and the custom `BasketProvider` are declared as explicit boundaries at the root of `ProductCatalogueClient`, making the state architecture visible at a glance.
+
+### Debounced search
+Search input updates React state immediately (so the input feels responsive), but the filter computation uses a 300ms debounced value via `useDebounce`. This avoids re-filtering the product list on every keystroke.
+
+### localStorage persistence
+`useBasket` initialises from `localStorage` via a lazy `useState` initialiser and writes back on every change via `useEffect`. Errors (e.g. private browsing) are silently caught so the basket degrades gracefully.
+
+### Data source
+Products are fetched from [fakestoreapi.com](https://fakestoreapi.com) using the `women's clothing` category endpoint. No API key required.
+
+---
+
+## Running Tests
+
+```bash
+# Unit + integration tests (all packages)
+npm run test
+
+# Unit + integration tests (UI package only)
+npx turbo run test --filter=@repo/ui
+
+# E2E tests (requires dev server or starts it automatically)
+cd apps/frontend
+npm run e2e
+```
+
+### Test coverage
+
+| Layer | Tool | What's covered |
+|---|---|---|
+| Unit | Jest | `useDebounce`, `useBasket`, `useProductFilter` |
+| Integration | Jest + Testing Library | `ProductCard`, `ProductModal`, `FilterBar`, `BasketDrawer`, `PaginationControls` |
+| E2E | Playwright | Product loading, search, empty state, modal, add to basket, basket drawer |
+
+---
+
+## Available Commands
+
+```bash
+npm run dev        # Start all apps in watch mode
+npm run build      # Production build (all packages)
+npm run test       # Run all tests
+npm run lint       # Lint all packages
+npm run typecheck  # TypeScript check across all packages
+```
+
+---
 
 ## Additional Resources
 
-- [Node.js Documentation](https://nodejs.org/en/docs/)
-- [Express Documentation](https://expressjs.com/en/starter/installing.html)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Turborepo Documentation](https://turbo.build/repo/docs)
+- [React Query Documentation](https://tanstack.com/query/latest)
+- [Playwright Documentation](https://playwright.dev)
+- [fakestoreapi.com](https://fakestoreapi.com)
