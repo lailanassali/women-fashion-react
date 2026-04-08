@@ -5,13 +5,14 @@ import { ProductCard } from './ProductCard'
 
 interface ProductGridProps {
   products: Product[]
+  onProductClick: (product: Product) => void
 }
 
-export function ProductGrid({ products }: ProductGridProps): React.JSX.Element {
+export function ProductGrid({ products, onProductClick }: ProductGridProps): React.JSX.Element {
   return (
     <div className="product-grid">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} onProductClick={onProductClick} />
       ))}
     </div>
   )
