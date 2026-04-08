@@ -34,7 +34,7 @@ describe('BasketDrawer', () => {
 
   it('shows empty state when basket is empty', () => {
     const { getByText } = render(<BasketDrawer {...defaultProps} items={[]} totalPrice={0} />)
-    expect(getByText('Your basket is empty.')).toBeDefined()
+    expect(getByText('Your basket is empty')).toBeDefined()
   })
 
   it('calls onClose when close button is clicked', () => {
