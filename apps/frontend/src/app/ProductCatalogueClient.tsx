@@ -8,12 +8,13 @@ import {
   ProductModal,
   BasketDrawer,
   FilterBar,
-  useBasket,
+  BasketProvider,
+  useBasketContext,
   useProductFilter,
   type Product,
 } from '@repo/ui/catalogue'
 
-const PRODUCTS_PER_PAGE = 8
+// ---- Server state ----
 const queryClient = new QueryClient()
 
 async function fetchProducts(): Promise<Product[]> {
@@ -22,12 +23,40 @@ async function fetchProducts(): Promise<Product[]> {
   return response.json()
 }
 
+const PRODUCTS_PER_PAGE = 8
+
+// ---- Basket UI ----
+function BasketSection(): React.JSX.Element | null {
+  const [open, setOpen] = useState(false)
+  const { items, totalCount, totalPrice, removeItem, updateQuantity } = useBasketContext()
+
+  return (
+    <>
+      <button className="basket-btn" onClick={() => setOpen(true)}>
+        Basket
+        {totalCount > 0 && <span className="basket-badge">{totalCount}</span>}
+      </button>
+
+      {open && (
+        <BasketDrawer
+          items={items}
+          totalPrice={totalPrice}
+          onClose={() => setOpen(false)}
+          onRemoveItem={removeItem}
+          onUpdateQuantity={updateQuantity}
+        />
+      )}
+    </>
+  )
+}
+
+// ---- Product catalogue ----
 function ProductCatalogueContent(): React.JSX.Element {
   const [page, setPage] = useState(1)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [basketOpen, setBasketOpen] = useState(false)
-  const { items, addItem, removeItem, updateQuantity, totalCount, totalPrice } = useBasket()
+  const { addItem } = useBasketContext()
 
+  // Server state — React Query owns caching, loading, error
   const { data: products, isLoading, error, isFetching } = useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: fetchProducts,
@@ -35,18 +64,14 @@ function ProductCatalogueContent(): React.JSX.Element {
     retry: 1,
   })
 
+  // Client state — filter/sort derived from server data
   const { filters, filtered, categories, setSearch, setCategory, setSort } = useProductFilter(products ?? [])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE))
   const pageProducts = filtered.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE)
 
-  useEffect(() => {
-    setPage(1)
-  }, [filters.search, filters.category, filters.sort])
-
-  useEffect(() => {
-    if (page > totalPages) setPage(1)
-  }, [page, totalPages])
+  useEffect(() => { setPage(1) }, [filters.search, filters.category, filters.sort])
+  useEffect(() => { if (page > totalPages) setPage(1) }, [page, totalPages])
 
   function handleAddToBasket(product: Product) {
     addItem(product)
@@ -59,10 +84,7 @@ function ProductCatalogueContent(): React.JSX.Element {
         <span className="brand">Women's Fashion</span>
         <div className="header-actions">
           {isFetching && !isLoading && <span className="status-line">Refreshing…</span>}
-          <button className="basket-btn" onClick={() => setBasketOpen(true)}>
-            Basket
-            {totalCount > 0 && <span className="basket-badge">{totalCount}</span>}
-          </button>
+          <BasketSection />
         </div>
       </header>
 
@@ -99,24 +121,17 @@ function ProductCatalogueContent(): React.JSX.Element {
           onAddToBasket={handleAddToBasket}
         />
       )}
-
-      {basketOpen && (
-        <BasketDrawer
-          items={items}
-          totalPrice={totalPrice}
-          onClose={() => setBasketOpen(false)}
-          onRemoveItem={removeItem}
-          onUpdateQuantity={updateQuantity}
-        />
-      )}
     </section>
   )
 }
 
+// ---- Root: providers declare state boundaries ----
 export function ProductCatalogueClient(): React.JSX.Element {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ProductCatalogueContent />
+    <QueryClientProvider client={queryClient}>  {/* server state */}
+      <BasketProvider>                          {/* client state */}
+        <ProductCatalogueContent />
+      </BasketProvider>
     </QueryClientProvider>
   )
 }
