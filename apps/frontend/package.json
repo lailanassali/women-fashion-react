@@ -9,8 +9,12 @@
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "start": "next start",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "e2e": "playwright test"
+  },
+  "jest": {
+    "preset": "@repo/jest-presets/browser",
+    "testPathIgnorePatterns": ["/node_modules/", "/e2e/"]
   },
   "dependencies": {
     "@repo/logger": "*",
