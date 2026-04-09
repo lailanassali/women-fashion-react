@@ -21,7 +21,11 @@ function saveToStorage(items: BasketItem[]): void {
 }
 
 export function useBasket() {
-  const [items, setItems] = useState<BasketItem[]>(() => loadFromStorage())
+  const [items, setItems] = useState<BasketItem[]>([])
+
+  useEffect(() => {
+    setItems(loadFromStorage())
+  }, [])
 
   useEffect(() => {
     saveToStorage(items)

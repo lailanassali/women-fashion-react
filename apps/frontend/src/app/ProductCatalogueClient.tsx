@@ -18,36 +18,37 @@ import {
 // ---- Server state ----
 const queryClient = new QueryClient()
 
+const FALLBACK_PRODUCTS: Product[] = [
+  { id: 1, title: 'Floral Wrap Dress', price: 52.99, category: "women's clothing", description: 'A light and airy wrap dress with a floral print, perfect for any occasion.', image: 'https://fakestoreapi.com/img/81fAn9bZXkL._AC_UX679_.jpg', rating: { rate: 4.5, count: 120 } },
+  { id: 2, title: 'Classic Trench Coat', price: 129.99, category: "women's clothing", description: 'A timeless trench coat in a neutral tone, tailored for a modern silhouette.', image: 'https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg', rating: { rate: 4.7, count: 89 } },
+  { id: 3, title: 'Slim Fit Blazer', price: 89.99, category: "women's clothing", description: 'Sharp and structured blazer, ideal for office wear or smart-casual looks.', image: 'https://fakestoreapi.com/img/71HblAHs1xL._AC_UY879_-2.jpg', rating: { rate: 4.3, count: 65 } },
+  { id: 4, title: 'Ribbed Knit Jumper', price: 44.99, category: "women's clothing", description: 'Soft ribbed knit jumper in a relaxed fit, great for layering in cooler months.', image: 'https://fakestoreapi.com/img/51eg55uWmdL._AC_UX679_.jpg', rating: { rate: 4.1, count: 200 } },
+  { id: 5, title: 'High Waist Wide Leg Trousers', price: 67.50, category: "women's clothing", description: 'Elegant wide leg trousers with a high waist cut for a flattering, elongated look.', image: 'https://fakestoreapi.com/img/61pHAEJ4NML._AC_UX679_.jpg', rating: { rate: 4.6, count: 45 } },
+  { id: 6, title: 'Satin Slip Skirt', price: 38.00, category: "women's clothing", description: 'Luxurious satin slip skirt with a fluid drape, available in midi length.', image: 'https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_FMwebp_QL65_.jpg', rating: { rate: 4.2, count: 77 } },
+  { id: 7, title: 'Linen Shirt Dress', price: 59.99, category: "women's clothing", description: 'Breathable linen shirt dress with button-down front, perfect for warm days.', image: 'https://fakestoreapi.com/img/51UDEzMJVpL._AC_UL640_FMwebp_QL65_.jpg', rating: { rate: 4.4, count: 133 } },
+  { id: 8, title: 'Cashmere Blend Cardigan', price: 95.00, category: "women's clothing", description: 'Soft cashmere blend cardigan with a relaxed, oversized fit for effortless comfort.', image: 'https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg', rating: { rate: 4.8, count: 58 } },
+]
+
 async function fetchProducts(): Promise<Product[]> {
-  const response = await fetch(`https://fakestoreapi.com/products/category/women's%20clothing`)
-  if (!response.ok) throw new Error('Failed to load products')
-  return response.json()
+  try {
+    const response = await fetch(`https://fakestoreapi.com/products/category/women%27s%20clothing`)
+    if (!response.ok) throw new Error('API unavailable')
+    return response.json()
+  } catch {
+    return FALLBACK_PRODUCTS
+  }
 }
 
 const PRODUCTS_PER_PAGE = 8
 
-// ---- Basket UI ----
-function BasketSection(): React.JSX.Element {
-  const [open, setOpen] = useState(false)
-  const { items, totalCount, totalPrice, removeItem, updateQuantity } = useBasketContext()
-
+// ---- Basket button (lives inside the header) ----
+function BasketButton({ onClick }: { onClick: () => void }): React.JSX.Element {
+  const { totalCount } = useBasketContext()
   return (
-    <>
-      <button className="basket-btn" onClick={() => setOpen(true)}>
-        Basket
-        {totalCount > 0 && <span className="basket-badge">{totalCount}</span>}
-      </button>
-
-      {open && (
-        <BasketDrawer
-          items={items}
-          totalPrice={totalPrice}
-          onClose={() => setOpen(false)}
-          onRemoveItem={removeItem}
-          onUpdateQuantity={updateQuantity}
-        />
-      )}
-    </>
+    <button className="basket-btn" onClick={onClick}>
+      Basket
+      {totalCount > 0 && <span className="basket-badge">{totalCount}</span>}
+    </button>
   )
 }
 
@@ -70,7 +71,8 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }): React.JSX.Element 
 function ProductCatalogueContent(): React.JSX.Element {
   const [page, setPage] = useState(1)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const { addItem } = useBasketContext()
+  const [basketOpen, setBasketOpen] = useState(false)
+  const { items, addItem, removeItem, updateQuantity, totalPrice } = useBasketContext()
 
   // Server state — React Query owns caching, loading, error
   const { data: products, isLoading, error, isFetching } = useQuery<Product[]>({
@@ -101,7 +103,7 @@ function ProductCatalogueContent(): React.JSX.Element {
         <span className="brand">Women's Fashion</span>
         <div className="header-actions">
           {isFetching && !isLoading && <span className="status-line">Refreshing…</span>}
-          <BasketSection />
+          <BasketButton onClick={() => setBasketOpen(true)} />
         </div>
       </header>
 
@@ -142,6 +144,16 @@ function ProductCatalogueContent(): React.JSX.Element {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToBasket={handleAddToBasket}
+        />
+      )}
+
+      {basketOpen && (
+        <BasketDrawer
+          items={items}
+          totalPrice={totalPrice}
+          onClose={() => setBasketOpen(false)}
+          onRemoveItem={removeItem}
+          onUpdateQuantity={updateQuantity}
         />
       )}
     </section>
